@@ -38,7 +38,7 @@ for pf in "$DEST/.lock/pid" "$DEST/run-proxy.pid" "$DEST/pvproxy.pid"; do
 done
 # Anything of ours not in those files: found by command line, so any "ps" works
 for d in /proc/[0-9]*; do
-  case "$(tr '\0' ' ' < "$d/cmdline" 2>/dev/null)" in
+  case "$({ tr '\0' ' ' < "$d/cmdline"; } 2>/dev/null)" in
     "sh $DEST/ctl.sh "*|"node $DEST/pvproxy.js"*) kill "${d#/proc/}" 2>/dev/null ;;
   esac
 done

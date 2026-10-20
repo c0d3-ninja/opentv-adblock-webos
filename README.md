@@ -128,7 +128,7 @@ Run the same install command again. It replaces the old version and keeps your s
 
 ## 🐢 Good to know (small trade-offs)
 
-- 🎬 **Prime Video closes** when Prime ad removal switches on or off, because it only reads its settings when it opens. Just open it again.
+- 📋 **Switching on or off closes the apps in Recent Lists** (like *Close All*), so every app opens fresh with the new setting. Prime Video only reads its settings when it opens. OpenTV Launcher and LG's home stay open. Nothing is closed when nothing changed.
 - ⏱️ **Web apps pick up the blocklist shortly after** it switches on, not instantly. `RESTART_WAM=1` makes it instant, but it closes every web app, including home-screen launchers like OpenTV Launcher, so it is off by default. When it is on, the app on screen is opened again afterwards.
 - 🧮 **Prime Video's secure traffic passes through the proxy,** so the proxy can check the real certificates. Connections are reused, so the extra work is small.
 - 🧱 **Ads built into the video stream can't be removed.** Live sports and channels that insert ads on the server send them as part of the stream itself.

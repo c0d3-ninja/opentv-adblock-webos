@@ -42,7 +42,7 @@ rotate() {
   if [ -f "$f" ] && [ "$(wc -c < "$f")" -gt 1000000 ]; then mv "$f" "$f.old"; fi
 }
 
-# Change one setting in the config file (added if missing)
+# Change one setting in the config file (added if missing), and in this run too
 set_conf() {
   [ -f "$CONF" ] || touch "$CONF"
   if grep -q "^$1=" "$CONF"; then
@@ -50,6 +50,7 @@ set_conf() {
   else
     echo "$1=$2" >> "$CONF"
   fi
+  eval "$1=\$2"
 }
 
 # Only one start/stop at a time (a toggle pressed twice must not overlap)
@@ -124,6 +125,24 @@ restart_wam() {
 
 close_prime() {
   luna luna://com.webos.applicationManager/closeByAppId "{\"id\":\"$APP_ID\"}" >/dev/null
+}
+
+# Like "Close All" in Recent Lists: close every app there and remove its card, so each
+# app opens fresh with the new blocking. OpenTV Launcher and LG's home stay.
+SWITCHED=0
+close_recents() {
+  ids=$(luna luna://com.webos.service.recent/listRecents '{}' 5000 |
+    grep -o '"appId": *"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')
+  n=0
+  for id in $ids; do
+    case "$id" in
+      com.opentvlauncher.lg|com.webos.app.home|*[!A-Za-z0-9._-]*) continue ;;
+    esac
+    luna luna://com.webos.applicationManager/closeByAppId "{\"id\":\"$id\"}" >/dev/null
+    luna luna://com.webos.service.recent/removeRecent "{\"appId\":\"$id\"}" >/dev/null
+    n=$((n + 1))
+  done
+  log "closed $n app(s) in Recent Lists"
 }
 
 # ---------------- Google ad-server blocklist (/etc/hosts) ----------------
@@ -221,7 +240,7 @@ orphan_pids() {
   for d in /proc/[0-9]*; do
     p=${d#/proc/}
     [ "$p" = "$keep" ] && continue
-    case "$(tr '\0' ' ' < "$d/cmdline" 2>/dev/null)" in
+    case "$({ tr '\0' ' ' < "$d/cmdline"; } 2>/dev/null)" in
       "node $DIR/pvproxy.js"*) echo "$p" ;;
     esac
   done
@@ -325,7 +344,12 @@ prime_start() {
   done
   if ! proxy_ready; then log "Prime Video: proxy did not start, app left untouched"; proxy_stop; return 0; fi
 
-  # Always build the config from the app's current file, so an updated app or a new port is picked up
+  # Already routed through this port: nothing to change (Prime Video is left open)
+  if prime_routed "$dir" && grep -q "\"127.0.0.1:$PROXY_PORT\"" "$DIR/prime_config.json" 2>/dev/null; then
+    return 0
+  fi
+
+  # Build the config from the app's current file, so an updated app or a new port is picked up
   prime_unroute "$dir"
   node "$DIR/primeconfig.js" "$dir/default_config.json" "$DIR/prime_config.json" "$PROXY_PORT" ||
     { log "Prime Video: could not build config"; proxy_stop; return 0; }
@@ -340,7 +364,7 @@ prime_start() {
     [ -f "$t" ] || continue
     if mount --bind "$DIR/prime_config.json" "$t"; then mounted=$((mounted + 1)); fi
   done
-  if [ $mounted -gt 0 ]; then log "Prime Video: routed through the proxy ($dir)"
+  if [ $mounted -gt 0 ]; then SWITCHED=1; log "Prime Video: routed through the proxy ($dir)"
   else log "Prime Video: no config file to override, app left untouched ($dir)"; proxy_stop
   fi
 }
@@ -348,6 +372,7 @@ prime_start() {
 prime_stop() {
   dir=$(prime_dir)
   if [ -n "$dir" ] && prime_routed "$dir"; then
+    SWITCHED=1
     prime_unroute "$dir"
     close_prime          # so it opens again with its normal settings
   fi
@@ -357,16 +382,25 @@ prime_stop() {
 
 # ---------------- on / off ----------------
 
+# SWITCHED=1 when blocking actually changed, so apps are only closed when needed
 do_start() {
   rotate
-  if hosts_start && [ "$RESTART_WAM" = 1 ]; then restart_wam; fi
+  if hosts_start; then
+    SWITCHED=1
+    [ "$RESTART_WAM" = 1 ] && restart_wam
+  fi
   prime_start "${1:-30}"
 }
 
 do_stop() {
   prime_stop
-  if hosts_stop && [ "$RESTART_WAM" = 1 ]; then restart_wam; fi
+  if hosts_stop; then
+    SWITCHED=1
+    [ "$RESTART_WAM" = 1 ] && restart_wam
+  fi
 }
+
+after_switch() { [ "$SWITCHED" = 1 ] && close_recents; }
 
 # ---------------- status ----------------
 
@@ -442,6 +476,7 @@ case "$1" in
     set_conf ENABLED 1
     log "turned on"
     do_start 30
+    after_switch
     cmd_status
     ;;
   off)
@@ -449,22 +484,26 @@ case "$1" in
     set_conf ENABLED 0
     log "turned off"
     do_stop
+    after_switch
     cmd_status
     ;;
   start)
     lock
     do_start 30
+    after_switch
     cmd_status
     ;;
   stop)
     lock
     do_stop
+    after_switch
     cmd_status
     ;;
   restart)
     lock
     do_stop
     do_start 30
+    after_switch
     cmd_status
     ;;
   status) cmd_status ;;

@@ -13,7 +13,7 @@
 
 # Downloads come from a fixed release, not from whatever is on main at that moment,
 # so a half-finished change can never break an install. Update with each release.
-RELEASE="v1.1.0"
+RELEASE="v1.1.1"
 REF=${OTV_REF:-$RELEASE}
 REPO_RAW="https://raw.githubusercontent.com/c0d3-ninja/opentv-adblock-webos/$REF"
 # Keep in sync with FILES in scripts/sums.js
@@ -129,7 +129,7 @@ if [ -f "$DEST/ctl.sh" ]; then
   # A start-up still waiting for Prime Video (up to 2 minutes after the TV starts) holds
   # the lock: stop it, the install turns everything on again below
   for d in /proc/[0-9]*; do
-    case "$(tr '\0' ' ' < "$d/cmdline" 2>/dev/null)" in
+    case "$({ tr '\0' ' ' < "$d/cmdline"; } 2>/dev/null)" in
       "sh $DEST/ctl.sh boot-run"*) kill "${d#/proc/}" 2>/dev/null && info "Stopped a start-up that was still running" ;;
     esac
   done

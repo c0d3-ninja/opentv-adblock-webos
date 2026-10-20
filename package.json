@@ -1,6 +1,6 @@
 {
   "name": "opentv-adblock-webos",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Ad blocking for rooted LG webOS TVs: removes Prime Video ad breaks and blocks Google ad servers.",
   "private": true,
   "license": "MIT",
