@@ -22,27 +22,72 @@ Ad blocking for **rooted LG webOS TVs**. It runs entirely on the TV and turns it
 
 ---
 
-## 🧰 Before you start
+## 🧰 Before you start (prerequisites)
 
-1. 🔓 **A rooted TV with the [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel)** (root status *ok*). Not rooted yet? Check [CanI.RootMy.TV](https://cani.rootmy.tv).
-2. 🖥️ **Root shell:** turn on **Telnet** (or SSH) in **Homebrew Channel → Settings**, then `telnet <TV IP address>` from a computer on the same network. A `#` prompt means you're root.
-3. 🟢 **For Prime Video:** Node.js 8+ and `openssl` on the TV (both come with webOS 4 and later). Without them, only the Google blocking is installed.
+1. 🔓 **Root your TV.** I used [slopbro](https://github.com/throwaway96/slopbro):
+   - 🔎 Your TV not supported by slopbro? Check [CanI.RootMy.TV](https://cani.rootmy.tv) for other options.
+   - 🐍 Get the slopbro repo on a computer that has Python 3.
+   - 📶 Put the computer and the TV on the same network.
+   - ▶️ Run slopbro, following its README. Accept the pairing prompt on the TV when it appears.
+   - 🍺 When it finishes, the **Homebrew Channel** is installed on your TV. Its root status must show *ok*.
+2. 🖥️ **Turn on root shell access.** On the TV, open **Homebrew Channel → Settings** and turn on **Telnet** (or **SSH**).
+3. 🔢 **Find your TV's IP address.** On the TV, go to **Settings → Network → Wi-Fi (or Wired) → Advanced Settings**.
+4. 💻 **A computer on the same network,** to log in to the TV.
+5. 🧪 **Check you can log in to the TV:**
+   ```sh
+   telnet <TV IP address>
+   ```
+   You should get a `#` prompt, which means you are root. On a Mac without telnet, run `brew install telnet` first.
+6. 🟢 **For Prime Video ad removal:** Node.js 8 or newer and `openssl` on the TV. Both come with webOS 4 and later. Without them, only the Google ad blocking is installed.
 
 ---
 
-## 🚀 Install
+## 🚀 Install (one command on the TV)
 
-In the TV's root shell, paste:
+1. 🔌 Log in to the TV's root shell from your computer:
+   ```sh
+   telnet <TV IP address>
+   ```
+2. 📋 Paste this one line and press Enter:
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/c0d3-ninja/opentv-adblock-webos/main/install.sh | sh
+   ```
+3. ⏳ Wait up to a minute. It downloads the current release, checks every file, sets everything up and turns it on:
+   ```
+     [ OK ] All files match their checksums
+     [ OK ] Certificate created
+     [ OK ] Starts automatically every time the TV turns on
+     [ OK ] Google ad blocklist is on
+     [ OK ] Prime Video ad removal is on
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/c0d3-ninja/opentv-adblock-webos/main/install.sh | sh
-```
+     Done! opentv-adblock is installed.
+   ```
+4. 🎉 That's it. Open Prime Video and play something.
 
-It downloads the current release, checks every file against its checksum, sets everything up and turns it on, ending with **"Done! opentv-adblock is installed."** If something didn't turn on, it says so and what to run next.
+If something didn't turn on, the installer says so and tells you what to run next.
 
-🛟 **No internet on the TV?** Copy this folder to the TV (for example with `scp`) and run `sh install.sh` inside it.
+### 🛟 Backup: TV can't reach GitHub?
 
-🔄 **Updating:** run the install command again. Your settings, extra domains and the TV's certificate are kept.
+Share the files from your computer instead:
+
+1. 💻 On your computer, get the project, either with git:
+   ```sh
+   git clone https://github.com/c0d3-ninja/opentv-adblock-webos.git
+   ```
+   or by downloading the ZIP from GitHub (**Code → Download ZIP**) and unzipping it.
+2. 💻 In the folder that contains `opentv-adblock-webos`, pack it and share it (needs Python 3):
+   ```sh
+   tar czf otv.tgz opentv-adblock-webos
+   python3 -m http.server 8000
+   ```
+   Keep the window open. If your computer asks whether to allow incoming connections, click **Allow**.
+3. 📺 On the TV's root shell, download, unpack and install it (put in your computer's IP address):
+   ```sh
+   cd /tmp && curl -fsS http://<computer IP>:8000/otv.tgz -o otv.tgz && tar xzf otv.tgz && sh opentv-adblock-webos/install.sh
+   ```
+4. ✅ When the TV says **"Done!"**, press **Ctrl+C** on your computer to stop sharing.
+
+🔄 **Updating:** run the same install command again. Your settings, extra domains and the TV's certificate are kept.
 
 ---
 
@@ -73,13 +118,22 @@ It downloads the current release, checks every file against its checksum, sets e
 
 ## 🗑️ Uninstall
 
-```sh
-sh /home/root/opentv-adblock/uninstall.sh
-```
+1. 📺 In the TV's root shell:
+   ```sh
+   sh /home/root/opentv-adblock/uninstall.sh
+   ```
+   Folder already gone? Use:
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/c0d3-ninja/opentv-adblock-webos/main/uninstall.sh | sh
+   ```
+2. ✅ It ends with **"Done! opentv-adblock is turned off and removed."** The Homebrew Channel and root access are not touched.
 
-Folder already gone? `curl -fsSL https://raw.githubusercontent.com/c0d3-ninja/opentv-adblock-webos/main/uninstall.sh | sh`. Want to keep your settings? Add `--keep`.
+💡 Want to keep your settings? `uninstall.sh --keep` turns everything off and removes the boot script, but keeps the files.
 
-It ends with **"Done! opentv-adblock is turned off and removed."** While installed, it keeps its own files in `/home/root/opentv-adblock` and a boot script in `/var/lib/webosbrew/init.d`. Nothing else is edited: `/etc/hosts` and Prime Video's `default_config.json` are only *covered* (a bind mount) by modified copies while blocking is on, and the originals stay untouched underneath.
+### 🧾 What it changes on the TV
+
+- 📁 **Its own files** in `/home/root/opentv-adblock`, and a **boot script** in `/var/lib/webosbrew/init.d`.
+- 🫥 **Nothing else is edited.** `/etc/hosts` and Prime Video's `default_config.json` are only *covered* by modified copies while blocking is on. The originals stay untouched underneath. Turning it off, uninstalling or rebooting removes the covers.
 
 ---
 
