@@ -1,0 +1,7 @@
+*.pem
+*.log
+*.log.old
+*.pid
+node_modules/
+.DS_Store
+.idea/
