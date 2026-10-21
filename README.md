@@ -1,5 +1,7 @@
 # 🛡️ opentv-adblock-webos
 
+> ⚠️ **Rooting your TV may void its warranty.** Proceed at your own risk.
+
 Ad blocking for **rooted LG webOS TVs**. It runs entirely on the TV and turns itself on every time the TV starts.
 
 ✅ Tested on an LG OLED42C2PSA (2022) with **webOS 25** (webOS TV 10.3.1, software version 33.31.68), Node.js 16 and Prime Video 9.2.10.
