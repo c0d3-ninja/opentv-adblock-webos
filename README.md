@@ -12,7 +12,6 @@ Ad blocking for **rooted LG webOS TVs**. It runs entirely on the TV and turns it
 |---|---|---|
 | 🎬 **Prime Video** | Removes ad breaks, the ad markers on the progress bar, and pause ads | A small proxy on the TV edits the app's playback data before the player reads it |
 | 🌐 **Google ads, TV-wide** | Blocks Google's ad servers for every app and the browser (SonyLIV, ZEE5, Hotstar, banner ads, ...) | Adds Google's ad-serving domains to the TV's hosts file |
-| 📺 **YouTube** | Blocks some ads, not all | The Google blocklist stops some of them. Most come from YouTube's own servers, the same ones that send the videos, so they can't be blocked without blocking YouTube |
 
 - 🔒 **Certificates stay checked:** the proxy verifies every secure connection Prime Video makes.
 - 🛟 **Safe by design:** if anything goes wrong, Prime Video goes back to its normal settings instead of breaking.
