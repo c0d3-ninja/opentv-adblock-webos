@@ -142,11 +142,11 @@ Share the files from your computer instead:
 
 - 📊 **Start with** `ctl.sh status` and `ctl.sh logs`.
 - 🎬 **Prime Video still shows ads:** `[pv]` lines in the logs show what was removed. `nothing to remove` means Amazon may have changed its data; please open an issue with the log.
-- 🎬 **Prime Video proxy OFF:** check `ctl.sh logs`, then `ctl.sh restart`.
+- 🎬 **Prime Video proxy OFF:** it retries by itself after 5 minutes. To restart it now: `ctl.sh restart`.
 - 🔄 **"Paused while Prime Video updates":** normal. It comes back by itself when the update is done (30 minutes at the latest).
 - 🌐 **A web app still shows Google ads right after switching on:** close and reopen it.
 - 🔌 **"Port 8888 is used by another program":** set another `PROXY_PORT` and `ctl.sh restart`.
-- 🔒 **"Amazon's certificates could not be verified":** Prime Video was set back to normal to keep working. Please open an issue with the logs and your webOS version.
+- 🔒 **"Amazon's certificates could not be verified":** Prime Video was set back to normal to keep working. It retries after 5 minutes. If it keeps happening, please open an issue with the logs and your webOS version.
 - 📦 **"Version ... was not found":** the release was just published or is missing. Wait a minute, or use the development version as the message shows.
 
 ---
